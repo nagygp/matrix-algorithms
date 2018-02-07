@@ -32,7 +32,12 @@
 </head>
 <body onload="javascript:LU_init()">
 
-<script type="text/javascript" async="" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" async="" 
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]} });
+</script>
 
 <h1>Gaussian elimination</h1>
 
@@ -44,7 +49,7 @@
 	<dt><strong>Row pivot element</strong></dt>
 	<dd>For a given nonzero row of the matrix $A$, the pivot element is its first non-zero entry.</dd>
 	<dt><strong>Row echelon form</strong></dt>
-	<dd>The matrix $$A$$ is in <a href="https://en.wikipedia.org/wiki/Row_echelon_form" target="_blank">row echelon form</a> if
+	<dd>The matrix $A$ is in <a href="https://en.wikipedia.org/wiki/Row_echelon_form" target="_blank">row echelon form</a> if
 	<ul>
 		<li>all nonzero rows are above any rows of all zeroes, and</li>
 		<li>the pivot of a nonzero row is always strictly to the right of the pivot of the row above it</li>
