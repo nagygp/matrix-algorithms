@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Eigenvalue Problem: The Jacobi method for symmetric matrices</title>
+<style type="text/css">
+.matrix td {
+	width: 40pt;
+	height: 30pt;
+	text-align: center;
+	vertical-align: middle;
+	padding : 0pt;
+	margin: 0;
+	border-spacing: 0;
+}
+#long_cycle_list tr {
+	background-color: #FFFFCC;
+}
+#parameters tr {
+	padding : 3pt;
+	margin: 0;
+	border-spacing: 0;
+	background-color: #FFFFCC;
+}
+#parameters td {
+	width: 150pt;
+	height: 30pt;
+	text-align: left;
+	vertical-align: middle;
+}
+</style>
+</head>
+<body onload="javascript:gen_rand_symm_mat()">
+
+<script type="text/javascript" async="" 
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]} });
+</script>
+
+<h2>Eigenvalue Problem for symmetric matrices: The Jacobi Method</h2>
+
+<p>For the mathematical background, please read the <a href="http://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm" target="_blank">Wikipedia page</a> on the Jacobi method.</p>
+
+<h3>The parameters</h3>
+
+<p>Matrix dimension = 5. Precision = 2 digits. Magnitude of matrix entries = 100.</p>
+<table>
+<tr><td>
+<button onclick="javascript:gen_rand_symm_mat()" style="width:300pt;height:50pt;">Reset (Generate random symmetric matrix)</button>
+</td></tr>
+</table>
+
+
+<h3>The diagonalization</h3>
+
+<button onclick="javascript:long_cycle_step()" style="width:300pt;height:50pt;">Make next step (<span id="val_n">1</span>)</button>
+<button onclick="javascript:run_cycle()" style="width:150pt;height:50pt;">Run full cycle</button>
+
+<table style="padding:5pt;width:50%;background-color:#FFFFA9;" id="long_cycle_list">
+<tr><td>1.</td><td>Determine $i,j$ ($i\neq j$) such that $|a_{ij}|$ is maximal.</td></tr>
+<tr><td>2.</td><td>Compute $c,s$.</td></tr>
+<tr><td>3.</td><td>Recalculate $A,Q$.</td></tr>
+</table>
+
+<p></p>
+
+<p></p>
+
+<p><span id="info"></span></p>
+
+
+<table>
+<tr><th>$Q^t$</th><th>$A$</th><th>$Q$</th><th></th><th>$B$</th></tr>
+<tr>
+<td><table class="matrix" id="matQt" style="background-color: #E6E6FA;">
+<tr><td>1.00</td><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td></tr>
+<tr><td>0.00</td><td>1.00</td><td>0.00</td><td>0.00</td><td>0.00</td></tr>
+<tr><td>0.00</td><td>0.00</td><td>1.00</td><td>0.00</td><td>0.00</td></tr>
+<tr><td>0.00</td><td>0.00</td><td>0.00</td><td>1.00</td><td>0.00</td></tr>
+<tr><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td><td>1.00</td></tr>
+</table></td>
+<td><table class="matrix" id="matA" style="background-color: #FFC0CB;">
+<tr><td>*</td><td>*</td><td>*</td><td>*</td><td>*</td></tr>
+<tr><td>*</td><td>*</td><td>*</td><td>*</td><td>*</td></tr>
+<tr><td>*</td><td>*</td><td>*</td><td>*</td><td>*</td></tr>
+<tr><td>*</td><td>*</td><td>*</td><td>*</td><td>*</td></tr>
+<tr><td>*</td><td>*</td><td>*</td><td>*</td><td>*</td></tr>
+</table></td>
+<td><table class="matrix" id="matQ" style="background-color: #E6E6FA;">
+<tr><td>1.00</td><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td></tr>
+<tr><td>0.00</td><td>1.00</td><td>0.00</td><td>0.00</td><td>0.00</td></tr>
+<tr><td>0.00</td><td>0.00</td><td>1.00</td><td>0.00</td><td>0.00</td></tr>
+<tr><td>0.00</td><td>0.00</td><td>0.00</td><td>1.00</td><td>0.00</td></tr>
+<tr><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td><td>1.00</td></tr>
+</table></td>
+<td>=</td>
+<td><table class="matrix" id="matB" style="background-color: #90EE90;">
+<tr><td>*</td><td>*</td><td>*</td><td>*</td><td>*</td></tr>
+<tr><td>*</td><td>*</td><td>*</td><td>*</td><td>*</td></tr>
+<tr><td>*</td><td>*</td><td>*</td><td>*</td><td>*</td></tr>
+<tr><td>*</td><td>*</td><td>*</td><td>*</td><td>*</td></tr>
+<tr><td>*</td><td>*</td><td>*</td><td>*</td><td>*</td></tr>
+</table></td>
+</tr>
+</table>
+
+<table style="padding:5pt;width:300pt;background-color:#FFFFA9;" id="parameters">
+<tr>
+<td>$\sum_{i\neq j}a_{ij}^2=$<span id="val_nodiag">*</span></td>
+<td>$c=$<span id="val_c"></span></td>
+</tr>
+<tr>
+<td>$\sum_{i}a_{ii}^2=$<span id="val_diag">*</span></td>
+<td>$s=$<span id="val_s"></span></td>
+</tr>
+</table>
+
+<button onclick="javascript:maple_export()" style="width:300pt;height:50pt;">Maple export state (as displayed)</button>
+<pre id="maple"></pre>
+
+<hr />
+<p>Copyright by &copy; <a href="http://www.math.u-szeged.hu/~nagyg/">Gábor P. Nagy</a>, 2013.</p>
+
+<script type="text/javascript" >
+var DIM=5, PREC=2, MAGN=100;
+var A=[[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]];
+var Q=[[1,0,0,0,0],[0,1,0,0,0],[0,0,1,0,0],[0,0,0,1,0],[0,0,0,0,1]];
+var long_cycle_state=0;
+var cycle_number=1;
+var A_nodiag_sum=0, A_diag_sum=0;
+var im=0,jm=0,am=-MAGN;
+var c=0,s=0;
+
+function run_cycle() {
+	if (long_cycle_state>0) {
+		document.getElementById("long_cycle_list").rows[long_cycle_state-1].style.backgroundColor="#FFFFCC";
+	}
+	long_cycle_state=0;
+	long_cycle_step();
+	long_cycle_step();
+	long_cycle_step();
+	long_cycle_step();
+	return 0;
+}
+
+function long_cycle_step() {
+	switch(long_cycle_state) {
+		case 0:
+			document.getElementById("long_cycle_list").rows[0].style.backgroundColor="#FFFF00";
+			compute_squaresums();
+			compute_maximum();
+			if (2*am<Math.pow(10,-PREC)) { 
+				long_cycle_exit(); 
+			} else {
+				highlight_A_pos(im,jm);
+				long_cycle_state++;
+			}
+			break;
+		case 1:
+			document.getElementById("long_cycle_list").rows[0].style.backgroundColor="#FFFFCC";
+			document.getElementById("long_cycle_list").rows[1].style.backgroundColor="#FFFF00";
+			var beta=(A[im][im]-A[jm][jm])/2/A[im][jm];
+			beta=beta/Math.sqrt(1+beta*beta);
+			c=Math.sqrt(1/2+beta/2);
+			s=Math.sqrt(1/2-beta/2);
+			document.getElementById("val_c").innerHTML=c.toFixed(2*PREC);
+			document.getElementById("val_s").innerHTML=s.toFixed(2*PREC);
+			long_cycle_state++;
+			break;
+		case 2:
+			document.getElementById("long_cycle_list").rows[1].style.backgroundColor="#FFFFCC";
+			document.getElementById("long_cycle_list").rows[2].style.backgroundColor="#FFFF00";
+			modify_AQ(im,jm,c,s);
+			print_mat("matA",A,DIM);
+			print_mat("matQ",Q,DIM);
+			print_mat_transposed("matQt",Q,DIM);
+			long_cycle_state++;
+			break;
+		case 3:
+			document.getElementById("long_cycle_list").rows[2].style.backgroundColor="#FFFFCC";
+			color_mat("matA","#FFC0CB",DIM);
+			document.getElementById("val_c").innerHTML="";
+			document.getElementById("val_s").innerHTML="";
+			cycle_number++;
+			document.getElementById("val_n").innerHTML=cycle_number;
+			long_cycle_state=0;
+			break;
+	}
+	return 0;
+}
+
+function long_cycle_exit() {
+	document.getElementById("long_cycle_list").rows[long_cycle_state].style.backgroundColor="#FFFFCC";
+	color_mat("matA","#FFC0CB",DIM);
+	long_cycle_state=-1;
+	alert("Iteration finished.");
+	return 0;
+}
+
+function modify_AQ(i,j,c,s) {
+	var xi=0,xj=0;
+	for (var k=0;k<DIM;k++) {
+		xi=c*A[i][k]+s*A[j][k];
+		xj=-s*A[i][k]+c*A[j][k];
+		A[i][k]=xi;
+		A[j][k]=xj;
+	}
+	for (var k=0;k<DIM;k++) {
+		xi=c*A[k][i]+s*A[k][j];
+		xj=-s*A[k][i]+c*A[k][j];
+		A[k][i]=xi;
+		A[k][j]=xj;
+	}
+	for (var k=0;k<DIM;k++) {
+		xi=c*Q[i][k]+s*Q[j][k];
+		xj=-s*Q[i][k]+c*Q[j][k];
+		Q[i][k]=xi;
+		Q[j][k]=xj;
+	}
+	return 0;
+}
+
+function compute_squaresums() {
+	A_nodiag_sum=0; 
+	A_diag_sum=0;
+	for (var i=0;i<DIM;i++) {
+		A_diag_sum+=A[i][i]*A[i][i]; 
+		for (var j=i+1;j<DIM;j++) {
+			A_nodiag_sum+=2*A[i][j]*A[i][j];
+		} 
+	}
+	document.getElementById("val_nodiag").innerHTML=A_nodiag_sum.toFixed(PREC);
+	document.getElementById("val_diag").innerHTML=A_diag_sum.toFixed(PREC);
+	return 0;
+}
+
+function compute_maximum() {
+	im=0;
+	jm=0;
+	am=-MAGN;
+	for (var i=0;i<DIM-1;i++) {
+		for (var j=i+1;j<DIM;j++) {
+			if (Math.abs(A[i][j])>am) { 
+				im=i; jm=j; am=Math.abs(A[i][j]);
+			}
+		} 
+	}
+	return 0;
+}
+
+function highlight_A_pos(i,j) {
+	for (var k=0;k<DIM;k++) {
+		document.getElementById("matA").rows[i].cells[k].style.backgroundColor="#F3879A";	
+		document.getElementById("matA").rows[j].cells[k].style.backgroundColor="#F3879A";	
+		document.getElementById("matA").rows[k].cells[i].style.backgroundColor="#F3879A";	
+		document.getElementById("matA").rows[k].cells[j].style.backgroundColor="#F3879A";	
+	}
+	document.getElementById("matA").rows[i].cells[j].style.backgroundColor="#F3617B";	
+	document.getElementById("matA").rows[j].cells[i].style.backgroundColor="#F3617B";	
+	return 0;
+}
+
+function print_mat(id,mat,dim) {
+	for (var i=0;i<dim;i++) {
+		for (var j=0;j<dim;j++) {
+			document.getElementById(id).rows[i].cells[j].innerHTML=mat[i][j].toFixed(PREC);
+		}
+	}
+}
+
+function print_mat_transposed(id,mat,dim) {
+	for (var i=0;i<dim;i++) {
+		for (var j=0;j<dim;j++) {
+			document.getElementById(id).rows[i].cells[j].innerHTML=mat[j][i].toFixed(PREC);
+		}
+	}
+}
+
+function color_mat(id,col,dim) {
+	for (var i=0;i<dim;i++) {
+		for (var j=0;j<dim;j++) {
+			document.getElementById(id).rows[i].cells[j].style.backgroundColor=col;
+		}
+	}
+}
+
+function bolddiag_mat(id,dim) {
+	for (var i=0;i<DIM;i++) {
+		document.getElementById(id).rows[i].cells[i].style.fontWeight="bold";
+	}
+	return 0;
+}
+
+function gen_rand_symm_mat() {
+	var u;
+	Q=[[1,0,0,0,0],[0,1,0,0,0],[0,0,1,0,0],[0,0,0,1,0],[0,0,0,0,1]];
+	long_cycle_state=0;
+	cycle_number=1;
+	for (var i=0;i<DIM;i++) { 
+			A[i][i]=-MAGN+Math.random()*2*MAGN;
+		for (var j=i+1;j<DIM;j++) {
+			u=-MAGN+Math.random()*2*MAGN;
+			A[i][j]=u;
+			A[j][i]=u;
+		}
+	}
+	print_mat("matA",A,DIM); 
+	color_mat("matA","#FFC0CB",DIM);
+	bolddiag_mat("matA",DIM);
+	compute_squaresums();
+	print_mat("matB",A,DIM); 
+	print_mat("matQ",Q,DIM); 
+	print_mat("matQt",Q,DIM); 
+	document.getElementById("val_nodiag").innerHTML="";
+	document.getElementById("val_diag").innerHTML="";
+	document.getElementById("val_c").innerHTML="";
+	document.getElementById("val_s").innerHTML="";
+	document.getElementById("val_n").innerHTML=cycle_number;
+	return 0;
+}
+
+function maple_print_mat(id,dim) {
+	var txt="Matrix(";
+	txt+=dim+","+dim+",[";
+	for (var i=0;i<dim;i++) {
+		for (var j=0;j<dim;j++) {
+			txt+=document.getElementById(id).rows[i].cells[j].innerHTML;
+			if (i+j<2*dim-2) { txt+=","; }
+		}
+	}
+	txt+="])";
+	return txt;
+}
+
+function maple_export() {
+	document.getElementById("maple").innerHTML="";
+	document.getElementById("maple").innerHTML+="with(LinearAlgebra);\n\n";
+	document.getElementById("maple").innerHTML+="Q:="+maple_print_mat("matQ",DIM)+";\n"
+	document.getElementById("maple").innerHTML+="evalm(Transpose(Q)&*Q);\n"; 
+	document.getElementById("maple").innerHTML+="B:="+maple_print_mat("matB",DIM)+";\n\n"
+	document.getElementById("maple").innerHTML+="A:="+maple_print_mat("matA",DIM)+";\n"
+	document.getElementById("maple").innerHTML+="Eigenvalues(B);\nevalm(Transpose(Q)&*A&*Q-B);\n"; 
+	return 0;
+}
+</script>
+
+
+
+</body>
+</html>
