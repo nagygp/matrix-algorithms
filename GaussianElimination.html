@@ -2,35 +2,55 @@
 <html>
 <head>
 <meta charset="utf-8" />
-<title>Gaussian elimination demo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Gaussian elimination and PALU decomposition</title>
 <style type="text/css">
-.matrix td {
-	width: 40pt;
-	height: 30pt;
-	text-align: center;
-	vertical-align: middle;
-	padding : 0pt;
-	margin: 0;
-	border-spacing: 0;
-}
-#long_cycle_list tr {
-	background-color: #FFFFCC;
-}
-#parameters tr {
-	padding : 3pt;
-	margin: 0;
-	border-spacing: 0;
-	background-color: #FFFFCC;
-}
-#parameters td {
-	width: 150pt;
-	height: 30pt;
-	text-align: left;
-	vertical-align: middle;
-}
+	:root {
+		color-scheme: light;
+		font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+		color: #172b4d;
+		background: #f4f7fb;
+	}
+	* { box-sizing: border-box; }
+	body { max-width: 1100px; margin: 0 auto; padding: 2rem 1.25rem 3rem; line-height: 1.6; }
+	h1, h2, h3 { line-height: 1.25; }
+	h1 { margin-bottom: .35rem; font-size: clamp(2rem, 5vw, 3rem); }
+	h2 { margin-top: 2.5rem; }
+	.lead { max-width: 75ch; color: #42526e; font-size: 1.1rem; }
+	.card { margin: 1.25rem 0; padding: 1.25rem; border: 1px solid #dfe5ee; border-radius: 12px; background: white; box-shadow: 0 3px 12px #172b4d0a; }
+	.formula { overflow-x: auto; margin: 1rem 0; padding: .85rem 1rem; border-left: 4px solid #3267a8; background: #eef5ff; font-size: 1.2rem; }
+	.algorithm { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; padding: 0; list-style: none; counter-reset: stages; }
+	.algorithm li { padding: .9rem; border-radius: 8px; background: #f4f7fb; counter-increment: stages; }
+	.algorithm li::before { content: counter(stages) ". "; font-weight: 700; color: #245b97; }
+	button { min-height: 42px; padding: .55rem .85rem; border: 1px solid #aab7c7; border-radius: 7px; background: white; color: #172b4d; font: inherit; cursor: pointer; }
+	button:hover { background: #eef5ff; border-color: #3267a8; }
+	button[aria-pressed="true"] { color: white; background: #245b97; border-color: #245b97; }
+	button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px solid #e09b22; outline-offset: 2px; }
+	.controls { display: flex; flex-wrap: wrap; gap: .5rem; }
+	.control-group { margin: 1rem 0; }
+	.control-group strong { display: block; margin-bottom: .45rem; }
+	.matrix-scroll { max-width: 100%; overflow-x: auto; margin: .6rem 0; }
+	table.matrix, table.factor-matrix { border-collapse: separate; border-spacing: 2px; width: max-content; }
+	.matrix td, .factor-matrix td { min-width: 3.4rem; height: 2.4rem; padding: .25rem .4rem; text-align: center; font-variant-numeric: tabular-nums; }
+	.matrix td { background: #f3f5f8; }
+	.matrix th { padding: .25rem .4rem; background: #e5eaf1; }
+	.factor-matrix td { min-width: 3.2rem; background: #f3f5f8; }
+	.factor-matrix caption { padding: .35rem; font-weight: 700; }
+	.factorization { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-start; }
+	.factorization > div { max-width: 100%; }
+	.pivot { font-weight: 800; outline: 2px solid #bd6b00; outline-offset: -2px; }
+	.legend { display: flex; flex-wrap: wrap; gap: .8rem 1.2rem; padding: 0; list-style: none; }
+	.legend li { display: flex; align-items: center; gap: .4rem; }
+	.swatch { width: 1rem; height: 1rem; border: 1px solid #aab7c7; }
+	.status { min-height: 3rem; padding: .8rem 1rem; border-radius: 8px; background: #eef5ff; }
+	.muted { color: #5e6c84; }
+	details { margin: 1rem 0; }
+	summary { cursor: pointer; font-weight: 650; }
+	footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #dfe5ee; color: #5e6c84; }
+	@media (max-width: 600px) { body { padding: 1.1rem .75rem 2rem; } .card { padding: .9rem; } }
 </style>
 </head>
-<body onload="javascript:LU_init()">
+<body onload="LU_init()">
 
 <script type="text/javascript" async="" 
     src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML">
@@ -39,115 +59,88 @@
   MathJax.Hub.Config({ tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]} });
 </script>
 
-<h1>Gaussian elimination</h1>
+<header>
+	<h1>Gaussian elimination</h1>
+	<p class="lead">Follow the row operations that turn a matrix into echelon form—and see how the same operations produce its PALU decomposition.</p>
+</header>
 
-<p>For the mathematical background, please read the <a href="https://en.wikipedia.org/wiki/Gaussian_elimination" target="_blank">Wikipedia page</a> on the Gaussian elimination.</p>
+<section class="card" aria-labelledby="idea-heading">
+	<h2 id="idea-heading">From elimination to PALU</h2>
+	<p>At each pivot, eliminate entries below it by subtracting a multiple of the pivot row. The multiples are recorded in a unit lower-triangular matrix $L$; the resulting echelon matrix is $U$. If the pivot rows are reordered, that row permutation is the permutation matrix $P$.</p>
+	<div class="formula">$$PA=LU$$</div>
+	<p>Here $P$ reorders rows of the original matrix, $L$ stores the elimination multipliers, and $U$ is the row-echelon result. For a square nonsingular matrix, this is the familiar PALU factorization. The same identity also applies to the rectangular matrices in this demo.</p>
+	<ol class="algorithm">
+		<li>Find the leftmost column with a nonzero entry among the rows not yet chosen.</li>
+		<li>Choose a pivot row there. Partial pivoting chooses the largest absolute entry in that column.</li>
+		<li>For each remaining row, record $\ell_{ik}=a_{i,j_k}/a_{k,j_k}$, where $j_k$ is the pivot column, then apply $R_i\leftarrow R_i-\ell_{ik}R_k$.</li>
+		<li>Place the pivot row next in the final row order; repeat. Rows with no pivot go at the bottom.</li>
+	</ol>
+	<p class="muted">A pivot is the first nonzero entry of a row after earlier elimination steps. A row-echelon matrix has pivots moving strictly right as you go down, with zero rows at the bottom.</p>
+</section>
 
-<h2>Definitions</h2>
-
-<dl>
-	<dt><strong>Row pivot element</strong></dt>
-	<dd>For a given nonzero row of the matrix $A$, the pivot element is its first non-zero entry.</dd>
-	<dt><strong>Row echelon form</strong></dt>
-	<dd>The matrix $A$ is in <a href="https://en.wikipedia.org/wiki/Row_echelon_form" target="_blank">row echelon form</a> if
-	<ul>
-		<li>all nonzero rows are above any rows of all zeroes, and</li>
-		<li>the pivot of a nonzero row is always strictly to the right of the pivot of the row above it</li>
-	</ul>
-	Example:
-	$\left[ \begin{array}{ccccc}
-	1 & a_0 & a_1 & a_2 & a_3 \\
-	0 & 0 & 2 & a_4 & a_5 \\
-	0 & 0 & 0 & 1 & a_6
-	\end{array} \right]$
-	</dd>
-	<dt><strong>Row reduction</strong></dt>
-	<dd>Assume $a_{ij}\neq 0$. We say that the row $k$ is reduced by row $i$ w.r.t. the $(i,j)$ entry, if a scalar multiple of row $i$ is substracted from row $k$ such that the $(k,j)$ entry becomes $0$.</dd>
-	<dt><strong>Gaussian elimination</strong></dt>
-	<dd>
-	<ul>
-		<li>Let $A$ be a matrix with $m$ rows and $n$ columns. Rows can be labeled as "completed" or "uncompleted". </li>
-		<li>Initially, all rows are labeled as "uncompleted".</li>
-		<li>For $i=0,\ldots,m-1$ do: </li>
-		<ul>
-			<li>Let $a_{st}$ be the leftmost nonzero elements of the uncompleted rows. </li>
-			<li>($a_{st}$ is well defined if and only if not all uncompleted rows are zero.)</li>
-			<li>If $a_{st}$ is well defined, then label the $s$th row as completed and reduce all uncompleted rows by the $s$th row.</li>
-			<li>If $a_{st}$ is not well defined, then label the first uncompleted row as "completed".</li>
+<section aria-labelledby="demo-heading">
+	<h2 id="demo-heading">Explore the steps</h2>
+	<div class="card">
+		<div class="control-group">
+			<strong>Matrix shape</strong>
+			<div class="controls">
+				<button type="button" onclick="set_params(10,7,DENSITY)">Tall · 10 × 7</button>
+				<button type="button" onclick="set_params(7,7,DENSITY)">Square · 7 × 7</button>
+				<button type="button" onclick="set_params(7,10,DENSITY)">Wide · 7 × 10</button>
+			</div>
+		</div>
+		<div class="control-group">
+			<strong>Matrix density</strong>
+			<div class="controls">
+				<button type="button" onclick="set_params(DIM_ROW,DIM_COL,1.0)">Full</button>
+				<button type="button" onclick="set_params(DIM_ROW,DIM_COL,0.7)">Dense</button>
+				<button type="button" onclick="set_params(DIM_ROW,DIM_COL,0.3)">Sparse</button>
+			</div>
+		</div>
+		<div class="control-group">
+			<strong>Pivot selection</strong>
+			<div class="controls">
+				<button id="first-row-button" type="button" aria-pressed="false" onclick="set_pivoting(false)">First eligible row</button>
+				<button id="partial-pivoting-button" type="button" aria-pressed="true" onclick="set_pivoting(true)">Partial pivoting</button>
+			</div>
+			<p class="muted">Partial pivoting picks the largest-magnitude eligible pivot. Both choices may reorder rows; the difference is how the pivot is chosen.</p>
+		</div>
+		<p>Current matrix: <strong><span id="nr_rows2"></span> × <span id="nr_cols"></span></strong>; displayed to <span id="prec"></span> decimal places.</p>
+		<ul class="legend" aria-label="Matrix cell colors">
+			<li><span class="swatch" style="background:#e1f3e8"></span>chosen (completed) row</li>
+			<li><span class="swatch" style="background:#f3f5f8"></span>not yet chosen</li>
+			<li><span class="swatch" style="background:#fff2bd"></span>eliminated zero</li>
+			<li><span class="swatch" style="background:#dceaff"></span>pivot</li>
 		</ul>
-	</ul>	
-	</dd>
-</dl>
+		<div class="matrix-scroll"><table id="matA_table" class="matrix" aria-label="Current matrix during Gaussian elimination"></table></div>
+		<div class="controls" aria-label="Elimination step controls">
+			<button type="button" onclick="step_pos(-1)">Previous step</button>
+			<strong class="status" aria-live="polite">Step <span id="position"></span> of <span id="nr_rows1"></span></strong>
+			<button type="button" onclick="step_pos(1)">Next step</button>
+		</div>
+		<p id="step_explanation" class="status" aria-live="polite"></p>
+	</div>
+</section>
 
-<hr />
-<h2>Demonstration</h2>
+<section aria-labelledby="factorization-heading">
+	<h2 id="factorization-heading">The resulting factorization</h2>
+	<div class="card">
+		<p>The final row order defines $P$. In the displayed $L$, each entry below the diagonal is the multiplier used to eliminate that row; the diagonal entries are 1. $U$ is the echelon matrix after putting rows in that same order. Entries are rounded to the displayed precision.</p>
+		<p id="row-order" class="status"></p>
+		<div id="factorization" class="factorization" aria-live="polite"></div>
+		<p class="muted">The source matrix is random; choose a shape or density to generate another example.</p>
+	</div>
+</section>
 
-<p><table><tr>
-<td><button onclick="javascript:set_params(10,7,DENSITY);" style="width:100pt;height:30pt;">Vertical matrix</button></td>
-<td><button onclick="javascript:set_params(7,7,DENSITY);" style="width:100pt;height:30pt;">Square matrix</button></td>
-<td><button onclick="javascript:set_params(7,10,DENSITY);" style="width:100pt;height:30pt;">Horizontal matrix</button></td>
-</tr><tr>
-<td><button onclick="javascript:set_params(DIM_ROW,DIM_COL,1.0);" style="width:100pt;height:30pt;">Full</button></td>
-<td><button onclick="javascript:set_params(DIM_ROW,DIM_COL,0.7);" style="width:100pt;height:30pt;">Dense</button></td>
-<td><button onclick="javascript:set_params(DIM_ROW,DIM_COL,0.3);" style="width:100pt;height:30pt;">Sparse</button></td>
-</tr>
-</table></p>
+<details class="card">
+	<summary>View the matrix with completed rows in pivot order</summary>
+	<div id="matA_table_permuted_div" class="matrix-scroll"></div>
+</details>
 
-<p>Matrix dimensions = <span id="nr_rows2"></span>x<span id="nr_cols"></span>.<p>
-<p>Precision = <span id="prec"></span> digits. Magnitude of matrix entries = <span id="magn"></span>.</p>
-
-<table id="matA_table" class="matrix" style="background-color:darkgrey;"></table>
-
-<p><table><tr>
-<td><button onclick="javascript:step_pos(-1)" style="width:100pt;height:30pt;">Step -1</button></td>
-<td>0 &le; <strong>step <span id="position"></span></strong> &le; <span id="nr_rows1"></span></td>
-<td><button onclick="javascript:step_pos(1)" style="width:100pt;height:30pt;">Step +1</button></td>
-</tr></table></p>
-
-<hr />
-<h2>Permuted rows <span style="background:yellow;" onclick="javascript:flipdisplay('sec_permuted');">[hide/show]</span></h2>
-
-<div id="sec_permuted" style="display:none;">
-<div id="matA_table_permuted_div" style="display:block;"></div>
-<h3>Observations</h3>
-<p><ul>
-	<li>The algorithm proceeds row by row, from above to below.</li>
-	<li>Completed rows are above, uncompleted rows are below in each step.</li>
-	<li>The resulting matrix is in row echelon form.</li>
-<ul></p>
-</div>
-
-
-<hr />
-<h3>The parameters <span style="background:yellow;" onclick="javascript:flipdisplay('sec_parameters');">[hide/show]</span></h3>
-
-<div id="sec_parameters" style="display:none;">
-<p>length=<span id="length">x</span></p>
-<p>ready=<span id="ready">x</span></p>
-<p>J=<span id="J">x</span></p>
-</div>
-
-<!--
-<table style="padding:5pt;width:300pt;background-color:"darkgrey";" id="parameters">
-<tr>
-<td>$\sum_{i\neq j}a_{ij}^2=$<span id="val_nodiag">*</span></td>
-<td>$c=$<span id="val_c"></span></td>
-</tr>
-<tr>
-<td>$\sum_{i}a_{ii}^2=$<span id="val_diag">*</span></td>
-<td>$s=$<span id="val_s"></span></td>
-</tr>
-</table>
-
-<button onclick="javascript:maple_export()" style="width:300pt;height:50pt;">Maple export state (as displayed)</button>
-<pre id="maple"></pre>
--->
-
-<hr />
-<p>Copyright by &copy; <a href="http://algebra.math.bme.hu/nagy-gabor/">Gábor P. Nagy</a>, 2017.</p>
+<footer>Created by &copy; <a href="https://algebra.math.bme.hu/nagy-gabor/">Gábor P. Nagy</a>, 2017.</footer>
 
 <script type="text/javascript" >
-var DIM_ROW=7, DIM_COL=10, PREC=2, MAGN=100, DENSITY=0.4, pivoting=false ;
+var DIM_ROW=7, DIM_COL=10, PREC=2, MAGN=100, DENSITY=0.4, pivoting=true ;
 var pos=0, pos_permuted=0, steps=[], id_perm=[];
 
 function LU_init() {
@@ -189,7 +182,11 @@ function LU_init() {
 	document.getElementById("matA_table_permuted_div").innerHTML="";
 	document.getElementById("matA_table_permuted_div").appendChild(table_clone);
 	
-	steps[0] = {A:A,ready:[],pivot:[]};
+	var multipliers = [];
+	for (var i=0;i<DIM_ROW;i++) {
+		multipliers[i] = new Array(DIM_ROW).fill(0);
+	}
+	steps[0] = {A:A,ready:[],pivot:[],multipliers:multipliers};
 	compute_steps();
 	display_state();
 	print_extended_matrix(A,[],[],true,"matA_table_permuted");
@@ -198,8 +195,8 @@ function LU_init() {
 	document.getElementById("nr_rows2").innerHTML=DIM_ROW;
 	document.getElementById("nr_cols").innerHTML=DIM_COL;
 	document.getElementById("prec").innerHTML=PREC;
-	document.getElementById("magn").innerHTML=MAGN;
-	document.getElementById("length").innerHTML=steps.length;
+	document.getElementById("first-row-button").setAttribute("aria-pressed",String(!pivoting));
+	document.getElementById("partial-pivoting-button").setAttribute("aria-pressed",String(pivoting));
 }
 
 function compute_steps() {
@@ -218,6 +215,8 @@ function compute_next_step() {
 	for (var i=0;i<DIM_ROW;i++) { A[i]=steps[steps.length-1].A[i].slice(); }
 	var ready=steps[steps.length-1].ready.slice();
 	var pivot=steps[steps.length-1].pivot.slice();
+	var multipliers=steps[steps.length-1].multipliers.map(function(row) { return row.slice(); });
+	var k=pivot.length;
 	var J=[];
 	var t=DIM_COL+2;
 	for (var i=0;i<DIM_ROW;i++) {
@@ -235,11 +234,13 @@ function compute_next_step() {
 	// t==DIM_COL   <=> all remaining rows are 0
 	// t==DIM_COL+2 <=> all rows are ready
 	ready.push(s);
+	multipliers[s][k]=1;
 	if (t<DIM_COL) {
 		// the following is effective only when not all rows are ready
 		for (var i=0;i<DIM_ROW;i++) {
 			if (ready.indexOf(i)==-1) {
 				var c=A[i][t]/A[s][t];
+				multipliers[i][k]=c;
 				A[i][t]=0;
 				for (var j=t+1;j<DIM_COL;j++) {
 					A[i][j]-=c*A[s][j];
@@ -248,7 +249,7 @@ function compute_next_step() {
 		}
 	}
 	pivot.push([s,t]);
-	steps.push({A:A,ready:ready,pivot:pivot});
+	steps.push({A:A,ready:ready,pivot:pivot,multipliers:multipliers});
 }
 
 function compute_next_step_no_pivoting() {
@@ -257,6 +258,8 @@ function compute_next_step_no_pivoting() {
 	for (var i=0;i<DIM_ROW;i++) { A[i]=steps[steps.length-1].A[i].slice(); }
 	var ready=steps[steps.length-1].ready.slice();
 	var pivot=steps[steps.length-1].pivot.slice();
+	var multipliers=steps[steps.length-1].multipliers.map(function(row) { return row.slice(); });
+	var k=pivot.length;
 	var J=[];
 	var t=DIM_COL+2;
 	for (var i=0;i<DIM_ROW;i++) {
@@ -270,11 +273,13 @@ function compute_next_step_no_pivoting() {
 	// t==DIM_COL   <=> all remaining rows are 0
 	// t==DIM_COL+2 <=> all rows are ready
 	ready.push(s);
+	multipliers[s][k]=1;
 	if (t<DIM_COL) {
 		// the following is effective only when not all rows are ready
 		for (var i=0;i<DIM_ROW;i++) {
 			if (ready.indexOf(i)==-1) {
 				var c=A[i][t]/A[s][t];
+				multipliers[i][k]=c;
 				A[i][t]=0;
 				for (var j=t+1;j<DIM_COL;j++) {
 					A[i][j]-=c*A[s][j];
@@ -283,7 +288,7 @@ function compute_next_step_no_pivoting() {
 		}
 	} 
 	pivot.push([s,t]);
-	steps.push({A:A,ready:ready,pivot:pivot});
+	steps.push({A:A,ready:ready,pivot:pivot,multipliers:multipliers});
 }
 
 
@@ -297,8 +302,8 @@ function display_state() {
 	print_extended_matrix(steps[pos].A,steps[pos].ready,steps[pos].pivot,false,"matA_table"); 
 	print_extended_matrix(steps[pos].A,steps[pos].ready,steps[pos].pivot,true,"matA_table_permuted"); 
 	document.getElementById("position").innerHTML=Math.round(pos);
-	document.getElementById("ready").innerHTML=steps[pos].ready;
-	document.getElementById("J").innerHTML=steps[pos].pivot.toString();
+	display_step_explanation();
+	display_factorization();
 }
 
 function print_extended_matrix(A,ready,pivot,rows_are_permuted,table_id) {
@@ -314,19 +319,21 @@ function print_extended_matrix(A,ready,pivot,rows_are_permuted,table_id) {
 			row.cells[j].innerHTML=A[perm[i]][j].toFixed(PREC);
 			row.cells[j].style.fontWeight="normal";
 			if (ready.indexOf(perm[i])==-1) {
-				row.cells[j].style.backgroundColor="lightgrey";
+				row.cells[j].style.backgroundColor="#f3f5f8";
 			} else if (A[perm[i]][j]==0) {
-				row.cells[j].style.backgroundColor="yellow";
+				row.cells[j].style.backgroundColor="#fff2bd";
 			} else {
-				row.cells[j].style.backgroundColor="lightgreen";
+				row.cells[j].style.backgroundColor="#e1f3e8";
 			}
-		row.cells[DIM_COL+1].innerHTML = "";
+			row.cells[j].className="";
 		}
+		row.cells[DIM_COL+1].innerHTML = "";
 	}
 	for (var i=0;i<pivot.length;i++) {
 		if (pivot[i][1]<DIM_COL) {
 			var ii = perm.indexOf(pivot[i][0]);
-			table.rows[ii].cells[pivot[i][1]].style.fontWeight="bold";
+			table.rows[ii].cells[pivot[i][1]].style.backgroundColor="#dceaff";
+			table.rows[ii].cells[pivot[i][1]].className="pivot";
 		}
 	}
 	for (var i=0;i<pos;i++) {
@@ -334,10 +341,71 @@ function print_extended_matrix(A,ready,pivot,rows_are_permuted,table_id) {
 	}
 }
 
-function flipdisplay(elm) {
-	var me=document.getElementById(elm);
-	if (me.style.display=="none") { me.style.display="block"; }
-	else if (me.style.display=="block") { me.style.display="none"; }
+function display_step_explanation() {
+	var message;
+	if (pos===0) {
+		message="Start with the original matrix. Choose Next step to select a pivot and eliminate entries below it.";
+	} else {
+		var previous=steps[pos-1];
+		var current=steps[pos];
+		var pivot=current.pivot[pos-1];
+		var pivotRow=pivot[0];
+		var pivotCol=pivot[1];
+		if (pivotCol<DIM_COL) {
+			var value=previous.A[pivotRow][pivotCol].toFixed(PREC);
+			var updates=[];
+			for (var i=0;i<DIM_ROW;i++) {
+				if (previous.ready.indexOf(i)===-1 && i!==pivotRow) {
+					updates.push("row "+(i+1)+": ℓ="+current.multipliers[i][pos-1].toFixed(PREC));
+				}
+			}
+			message="Step "+pos+": choose "+(pivoting ? "the largest eligible pivot" : "the first eligible pivot")+
+				" in column "+(pivotCol+1)+" (row "+(pivotRow+1)+", value "+value+"). Move it to pivot position "+pos+
+				" and apply Rᵢ ← Rᵢ − ℓᵢ"+pos+"R"+pos+". Multipliers: "+(updates.length ? updates.join("; ") : "none")+".";
+		} else {
+			message="Step "+pos+": no pivot remains in the uncompleted rows; this zero row is placed at the bottom.";
+		}
+	}
+	document.getElementById("step_explanation").textContent=message;
+}
+
+function matrix_html(matrix, caption, formatter) {
+	var html='<div class="matrix-scroll"><table class="factor-matrix"><caption>'+caption+'</caption><tbody>';
+	for (var i=0;i<matrix.length;i++) {
+		html+="<tr>";
+		for (var j=0;j<matrix[i].length;j++) {
+			html+="<td>"+formatter(matrix[i][j])+"</td>";
+		}
+		html+="</tr>";
+	}
+	return html+"</tbody></table></div>";
+}
+
+function display_factorization() {
+	var finalState=steps[DIM_ROW];
+	var order=finalState.ready;
+	var P=[], L=[], U=[];
+	for (var i=0;i<DIM_ROW;i++) {
+		P[i]=[];
+		for (var j=0;j<DIM_ROW;j++) {
+			P[i][j]=order[i]===j ? 1 : 0;
+		}
+		L[i]=finalState.multipliers[order[i]].slice(0,DIM_ROW);
+		U[i]=finalState.A[order[i]].slice();
+	}
+	document.getElementById("row-order").textContent="Final row order (1-based): "+order.map(function(row) { return row+1; }).join(", ")+
+		". P reorders the rows of A in this order.";
+	document.getElementById("factorization").innerHTML=
+		matrix_html(P,"P — row permutation",function(value) { return value.toString(); })+
+		'<span aria-hidden="true" style="align-self:center;font-size:1.4rem">·</span>'+
+		matrix_html(L,"L — elimination multipliers",function(value) { return value.toFixed(PREC); })+
+		'<span aria-hidden="true" style="align-self:center;font-size:1.4rem">=</span>'+
+		matrix_html(U,"U — row-echelon matrix",function(value) { return value.toFixed(PREC); });
+}
+
+function set_pivoting(usePartialPivoting) {
+	pivoting=usePartialPivoting;
+	LU_init();
 }
 
 function set_params(nr_rows, nr_cols, delta) { 
