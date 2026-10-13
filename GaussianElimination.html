@@ -47,10 +47,11 @@
 	details { margin: 1rem 0; }
 	summary { cursor: pointer; font-weight: 650; }
 	footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #dfe5ee; color: #5e6c84; }
+	.language-switch { display: flex; justify-content: flex-end; gap: .5rem; margin-bottom: 1rem; }
 	@media (max-width: 600px) { body { padding: 1.1rem .75rem 2rem; } .card { padding: .9rem; } }
 </style>
 </head>
-<body onload="LU_init()">
+<body onload="LU_init(); set_language(navigator.language && navigator.language.toLowerCase().indexOf('hu')===0 ? 'hu' : 'en')">
 
 <script type="text/javascript" async="" 
     src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML">
@@ -60,88 +61,193 @@
 </script>
 
 <header>
-	<h1>Gaussian elimination</h1>
-	<p class="lead">Follow the row operations that turn a matrix into echelon form—and see how the same operations produce its PALU decomposition.</p>
+	<nav class="language-switch" aria-label="Language" data-i18n-aria="language-label">
+		<button id="language-en" type="button" onclick="set_language('en')" aria-pressed="true">English</button>
+		<button id="language-hu" type="button" onclick="set_language('hu')" aria-pressed="false">Magyar</button>
+	</nav>
+	<h1 data-i18n="title">Gaussian elimination</h1>
+	<p class="lead" data-i18n="lead">Follow the row operations that turn a matrix into echelon form—and see how the same operations produce its PALU decomposition.</p>
 </header>
 
 <section class="card" aria-labelledby="idea-heading">
-	<h2 id="idea-heading">From elimination to PALU</h2>
-	<p>At each pivot, eliminate entries below it by subtracting a multiple of the pivot row. The multiples are recorded in a unit lower-triangular matrix $L$; the resulting echelon matrix is $U$. If the pivot rows are reordered, that row permutation is the permutation matrix $P$.</p>
+	<h2 id="idea-heading" data-i18n="idea-heading">From elimination to PALU</h2>
+	<p data-i18n="idea-copy">At each pivot, eliminate entries below it by subtracting a multiple of the pivot row. The multiples are recorded in a unit lower-triangular matrix $L$; the resulting echelon matrix is $U$. If the pivot rows are reordered, that row permutation is the permutation matrix $P$.</p>
 	<div class="formula">$$PA=LU$$</div>
-	<p>Here $P$ reorders rows of the original matrix, $L$ stores the elimination multipliers, and $U$ is the row-echelon result. For a square nonsingular matrix, this is the familiar PALU factorization. The same identity also applies to the rectangular matrices in this demo.</p>
+	<p data-i18n="factor-copy">Here $P$ reorders rows of the original matrix, $L$ stores the elimination multipliers, and $U$ is the row-echelon result. For a square nonsingular matrix, this is the familiar PALU factorization. The same identity also applies to the rectangular matrices in this demo.</p>
 	<ol class="algorithm">
-		<li>Find the leftmost column with a nonzero entry among the rows not yet chosen.</li>
-		<li>Choose a pivot row there. Partial pivoting chooses the largest absolute entry in that column.</li>
-		<li>For each remaining row, record $\ell_{ik}=a_{i,j_k}/a_{k,j_k}$, where $j_k$ is the pivot column, then apply $R_i\leftarrow R_i-\ell_{ik}R_k$.</li>
-		<li>Place the pivot row next in the final row order; repeat. Rows with no pivot go at the bottom.</li>
+		<li data-i18n="algorithm-1">Find the leftmost column with a nonzero entry among the rows not yet chosen.</li>
+		<li data-i18n="algorithm-2">Choose a pivot row there. Partial pivoting chooses the largest absolute entry in that column.</li>
+		<li data-i18n="algorithm-3">For each remaining row, record $\ell_{ik}=a_{i,j_k}/a_{k,j_k}$, where $j_k$ is the pivot column, then apply $R_i\leftarrow R_i-\ell_{ik}R_k$.</li>
+		<li data-i18n="algorithm-4">Place the pivot row next in the final row order; repeat. Rows with no pivot go at the bottom.</li>
 	</ol>
-	<p class="muted">A pivot is the first nonzero entry of a row after earlier elimination steps. A row-echelon matrix has pivots moving strictly right as you go down, with zero rows at the bottom.</p>
+	<p class="muted" data-i18n="definitions">A pivot is the first nonzero entry of a row after earlier elimination steps. A row-echelon matrix has pivots moving strictly right as you go down, with zero rows at the bottom.</p>
 </section>
 
 <section aria-labelledby="demo-heading">
-	<h2 id="demo-heading">Explore the steps</h2>
+	<h2 id="demo-heading" data-i18n="demo-heading">Explore the steps</h2>
 	<div class="card">
 		<div class="control-group">
-			<strong>Matrix shape</strong>
+			<strong data-i18n="shape-label">Matrix shape</strong>
 			<div class="controls">
-				<button type="button" onclick="set_params(10,7,DENSITY)">Tall · 10 × 7</button>
-				<button type="button" onclick="set_params(7,7,DENSITY)">Square · 7 × 7</button>
-				<button type="button" onclick="set_params(7,10,DENSITY)">Wide · 7 × 10</button>
+				<button type="button" onclick="set_params(10,7,DENSITY)"><span data-i18n="tall">Tall</span> · 10 × 7</button>
+				<button type="button" onclick="set_params(7,7,DENSITY)"><span data-i18n="square">Square</span> · 7 × 7</button>
+				<button type="button" onclick="set_params(7,10,DENSITY)"><span data-i18n="wide">Wide</span> · 7 × 10</button>
 			</div>
 		</div>
 		<div class="control-group">
-			<strong>Matrix density</strong>
+			<strong data-i18n="density-label">Matrix density</strong>
 			<div class="controls">
-				<button type="button" onclick="set_params(DIM_ROW,DIM_COL,1.0)">Full</button>
-				<button type="button" onclick="set_params(DIM_ROW,DIM_COL,0.7)">Dense</button>
-				<button type="button" onclick="set_params(DIM_ROW,DIM_COL,0.3)">Sparse</button>
+				<button type="button" onclick="set_params(DIM_ROW,DIM_COL,1.0)" data-i18n="full">Full</button>
+				<button type="button" onclick="set_params(DIM_ROW,DIM_COL,0.7)" data-i18n="dense">Dense</button>
+				<button type="button" onclick="set_params(DIM_ROW,DIM_COL,0.3)" data-i18n="sparse">Sparse</button>
 			</div>
 		</div>
 		<div class="control-group">
-			<strong>Pivot selection</strong>
+			<strong data-i18n="pivot-selection">Pivot selection</strong>
 			<div class="controls">
-				<button id="first-row-button" type="button" aria-pressed="false" onclick="set_pivoting(false)">First eligible row</button>
-				<button id="partial-pivoting-button" type="button" aria-pressed="true" onclick="set_pivoting(true)">Partial pivoting</button>
+				<button id="first-row-button" type="button" aria-pressed="false" onclick="set_pivoting(false)" data-i18n="first-row">First eligible row</button>
+				<button id="partial-pivoting-button" type="button" aria-pressed="true" onclick="set_pivoting(true)" data-i18n="partial-pivoting">Partial pivoting</button>
 			</div>
-			<p class="muted">Partial pivoting picks the largest-magnitude eligible pivot. Both choices may reorder rows; the difference is how the pivot is chosen.</p>
+			<p class="muted" data-i18n="pivot-help">Partial pivoting picks the largest-magnitude eligible pivot. Both choices may reorder rows; the difference is how the pivot is chosen.</p>
 		</div>
-		<p>Current matrix: <strong><span id="nr_rows2"></span> × <span id="nr_cols"></span></strong>; displayed to <span id="prec"></span> decimal places.</p>
-		<ul class="legend" aria-label="Matrix cell colors">
-			<li><span class="swatch" style="background:#e1f3e8"></span>chosen (completed) row</li>
-			<li><span class="swatch" style="background:#f3f5f8"></span>not yet chosen</li>
-			<li><span class="swatch" style="background:#fff2bd"></span>eliminated zero</li>
-			<li><span class="swatch" style="background:#dceaff"></span>pivot</li>
+		<p><span data-i18n="current-matrix">Current matrix</span>: <strong><span id="nr_rows2"></span> × <span id="nr_cols"></span></strong>; <span data-i18n="precision-start">displayed to</span> <span id="prec"></span> <span data-i18n="precision-end">decimal places.</span></p>
+		<ul class="legend" aria-label="Matrix cell colors" data-i18n-aria="matrix-colors">
+			<li><span class="swatch" style="background:#e1f3e8"></span><span data-i18n="legend-completed">chosen (completed) row</span></li>
+			<li><span class="swatch" style="background:#f3f5f8"></span><span data-i18n="legend-unselected">not yet chosen</span></li>
+			<li><span class="swatch" style="background:#fff2bd"></span><span data-i18n="legend-zero">eliminated zero</span></li>
+			<li><span class="swatch" style="background:#dceaff"></span><span data-i18n="legend-pivot">pivot</span></li>
 		</ul>
-		<div class="matrix-scroll"><table id="matA_table" class="matrix" aria-label="Current matrix during Gaussian elimination"></table></div>
-		<div class="controls" aria-label="Elimination step controls">
-			<button type="button" onclick="step_pos(-1)">Previous step</button>
-			<strong class="status" aria-live="polite">Step <span id="position"></span> of <span id="nr_rows1"></span></strong>
-			<button type="button" onclick="step_pos(1)">Next step</button>
+		<div class="matrix-scroll"><table id="matA_table" class="matrix" aria-label="Current matrix during Gaussian elimination" data-i18n-aria="current-matrix-aria"></table></div>
+		<div class="controls" aria-label="Elimination step controls" data-i18n-aria="step-controls">
+			<button type="button" onclick="step_pos(-1)" data-i18n="previous-step">Previous step</button>
+			<strong class="status"><span data-i18n="step">Step</span> <span id="position"></span> <span data-i18n="of">of</span> <span id="nr_rows1"></span></strong>
+			<button type="button" onclick="step_pos(1)" data-i18n="next-step">Next step</button>
 		</div>
 		<p id="step_explanation" class="status" aria-live="polite"></p>
 	</div>
 </section>
 
 <section aria-labelledby="factorization-heading">
-	<h2 id="factorization-heading">The resulting factorization</h2>
+	<h2 id="factorization-heading" data-i18n="factorization-heading">The resulting factorization</h2>
 	<div class="card">
-		<p>The final row order defines $P$. In the displayed $L$, each entry below the diagonal is the multiplier used to eliminate that row; the diagonal entries are 1. $U$ is the echelon matrix after putting rows in that same order. Entries are rounded to the displayed precision.</p>
+		<p data-i18n="factorization-help">The final row order defines $P$. In the displayed $L$, each entry below the diagonal is the multiplier used to eliminate that row; the diagonal entries are 1. $U$ is the echelon matrix after putting rows in that same order. Entries are rounded to the displayed precision.</p>
 		<p id="row-order" class="status"></p>
 		<div id="factorization" class="factorization" aria-live="polite"></div>
-		<p class="muted">The source matrix is random; choose a shape or density to generate another example.</p>
+		<p class="muted" data-i18n="random-help">The source matrix is random; choose a shape or density to generate another example.</p>
 	</div>
 </section>
 
 <details class="card">
-	<summary>View the matrix with completed rows in pivot order</summary>
+	<summary data-i18n="permuted-summary">View the matrix with completed rows in pivot order</summary>
 	<div id="matA_table_permuted_div" class="matrix-scroll"></div>
 </details>
 
-<footer>Created by &copy; <a href="https://algebra.math.bme.hu/nagy-gabor/">Gábor P. Nagy</a>, 2017.</footer>
+<footer><span data-i18n="created-by">Created by</span> &copy; <a href="https://algebra.math.bme.hu/nagy-gabor/">Gábor P. Nagy</a>, 2017.</footer>
 
 <script type="text/javascript" >
 var DIM_ROW=7, DIM_COL=10, PREC=2, MAGN=100, DENSITY=0.4, pivoting=true ;
 var pos=0, pos_permuted=0, steps=[], id_perm=[];
+var current_language="en";
+var translations={
+	en:{
+		documentTitle:"Gaussian elimination and PALU decomposition",
+		title:"Gaussian elimination",
+		lead:"Follow the row operations that turn a matrix into echelon form—and see how the same operations produce its PALU decomposition.",
+		"idea-heading":"From elimination to PALU",
+		"idea-copy":"At each pivot, eliminate entries below it by subtracting a multiple of the pivot row. The multiples are recorded in a unit lower-triangular matrix $L$; the resulting echelon matrix is $U$. If the pivot rows are reordered, that row permutation is the permutation matrix $P$.",
+		"factor-copy":"Here $P$ reorders rows of the original matrix, $L$ stores the elimination multipliers, and $U$ is the row-echelon result. For a square nonsingular matrix, this is the familiar PALU factorization. The same identity also applies to the rectangular matrices in this demo.",
+		"algorithm-1":"Find the leftmost column with a nonzero entry among the rows not yet chosen.",
+		"algorithm-2":"Choose a pivot row there. Partial pivoting chooses the largest absolute entry in that column.",
+		"algorithm-3":"For each remaining row, record $\\ell_{ik}=a_{i,j_k}/a_{k,j_k}$, where $j_k$ is the pivot column, then apply $R_i\\leftarrow R_i-\\ell_{ik}R_k$.",
+		"algorithm-4":"Place the pivot row next in the final row order; repeat. Rows with no pivot go at the bottom.",
+		definitions:"A pivot is the first nonzero entry of a row after earlier elimination steps. A row-echelon matrix has pivots moving strictly right as you go down, with zero rows at the bottom.",
+		"demo-heading":"Explore the steps",
+		"shape-label":"Matrix shape",
+		tall:"Tall", square:"Square", wide:"Wide",
+		"density-label":"Matrix density", full:"Full", dense:"Dense", sparse:"Sparse",
+		"pivot-selection":"Pivot selection", "first-row":"First eligible row", "partial-pivoting":"Partial pivoting",
+		"pivot-help":"Partial pivoting picks the largest-magnitude eligible pivot. Both choices may reorder rows; the difference is how the pivot is chosen.",
+		"current-matrix":"Current matrix", "precision-start":"displayed to", "precision-end":"decimal places.",
+		"matrix-colors":"Matrix cell colors", "legend-completed":"chosen (completed) row",
+		"legend-unselected":"not yet chosen", "legend-zero":"eliminated zero", "legend-pivot":"pivot",
+		"language-label":"Language",
+		"current-matrix-aria":"Current matrix during Gaussian elimination", "step-controls":"Elimination step controls",
+		"previous-step":"Previous step", step:"Step", of:"of", "next-step":"Next step",
+		"factorization-heading":"The resulting factorization",
+		"factorization-help":"The final row order defines $P$. In the displayed $L$, each entry below the diagonal is the multiplier used to eliminate that row; the diagonal entries are 1. $U$ is the echelon matrix after putting rows in that same order. Entries are rounded to the displayed precision.",
+		"random-help":"The source matrix is random; choose a shape or density to generate another example.",
+		"permuted-summary":"View the matrix with completed rows in pivot order",
+		"created-by":"Created by",
+		initialStep:"Start with the original matrix. Choose Next step to select a pivot and eliminate entries below it.",
+		stepPrefix:"Step", chooseLargest:"choose the largest eligible pivot", chooseFirst:"choose the first eligible pivot",
+		inColumn:"in column", row:"row", value:"value", moveTo:"Move it to pivot position",
+		andApply:"and apply", multipliers:"Multipliers", none:"none",
+		zeroRow:"no pivot remains in the uncompleted rows; this zero row is placed at the bottom.",
+		finalOrder:"Final row order (1-based)", reorderExplanation:"P reorders the rows of A in this order.",
+		pTitle:"P — row permutation", lTitle:"L — elimination multipliers", uTitle:"U — row-echelon matrix"
+	},
+	hu:{
+		documentTitle:"Gauss-elimináció és PALU-felbontás",
+		title:"Gauss-elimináció",
+		lead:"Kövesd végig a mátrix lépcsős alakra hozását, és lásd meg, hogyan adják ugyanezek a sorátalakítások a PALU-felbontást.",
+		"idea-heading":"Az eliminációtól a PALU-felbontásig",
+		"idea-copy":"Minden főelem alatt kinullázzuk az elemeket a főelemsor megfelelő skalárszorosának kivonásával. A szorzókat az egységátlójú alsó háromszögmátrix, az $L$ tárolja; az így kapott lépcsős mátrix az $U$. Ha a főelemsorokat átrendezzük, ezt a sorpermutációt a $P$ permutációmátrix írja le.",
+		"factor-copy":"A $P$ az eredeti mátrix sorait rendezi át, az $L$ tárolja az eliminációs szorzókat, az $U$ pedig a lépcsős alak. Négyzetes, nemszinguláris mátrix esetén ez a szokásos PALU-felbontás. Az azonosság a bemutató téglalap alakú mátrixaira is érvényes.",
+		"algorithm-1":"Keresd meg a még ki nem választott sorokban szereplő legbaloldalibb nemnulla elemet tartalmazó oszlopot.",
+		"algorithm-2":"Válassz főelemsort ebben az oszlopban. Részleges főelemkiválasztásnál a legnagyobb abszolút értékű elemet választjuk.",
+		"algorithm-3":"Minden további sorhoz jegyezd fel az $\\ell_{ik}=a_{i,j_k}/a_{k,j_k}$ szorzót, ahol $j_k$ a főelemoszlop, majd végezd el az $R_i\\leftarrow R_i-\\ell_{ik}R_k$ sorátalakítást.",
+		"algorithm-4":"A főelemsor kerüljön a végleges sorrend következő helyére; ismételd a lépéseket. A főelem nélküli sorok alulra kerülnek.",
+		definitions:"A főelem a sor első nemnulla eleme az előző eliminációs lépések után. Lépcsős alakban lefelé haladva a főelemek szigorúan jobbra tolódnak, a nullasorok pedig alul helyezkednek el.",
+		"demo-heading":"Lépésenkénti bemutató",
+		"shape-label":"A mátrix alakja",
+		tall:"Magas", square:"Négyzetes", wide:"Széles",
+		"density-label":"A mátrix kitöltöttsége", full:"Teljes", dense:"Sűrű", sparse:"Ritka",
+		"pivot-selection":"Főelemkiválasztás", "first-row":"Első alkalmas sor", "partial-pivoting":"Részleges főelemkiválasztás",
+		"pivot-help":"Részleges főelemkiválasztásnál a legnagyobb abszolút értékű alkalmas elemet választjuk. Mindkét módszer átrendezheti a sorokat; a különbség a főelem megválasztása.",
+		"current-matrix":"Aktuális mátrix", "precision-start":"Kerekítés:", "precision-end":"tizedesjegyre.",
+		"matrix-colors":"A mátrix celláinak színei", "legend-completed":"kiválasztott (kész) sor",
+		"legend-unselected":"még ki nem választott sor", "legend-zero":"kinullázott elem", "legend-pivot":"főelem",
+		"language-label":"Nyelv",
+		"current-matrix-aria":"A Gauss-elimináció aktuális mátrixa", "step-controls":"Az elimináció léptetése",
+		"previous-step":"Előző lépés", step:"Lépés", of:"/", "next-step":"Következő lépés",
+		"factorization-heading":"A kapott felbontás",
+		"factorization-help":"A végleges sorrend határozza meg a $P$ mátrixot. A megjelenített $L$ főátló alatti elemei az adott sor kinullázásához használt szorzók; a főátló elemei 1-esek. Az $U$ mátrix a lépcsős alak, a sorokat ugyanebbe a sorrendbe rendezve. Az értékek a megadott pontosságra kerekítve jelennek meg.",
+		"random-help":"A kiinduló mátrix véletlenszerű; válassz másik alakot vagy kitöltöttséget új példa létrehozásához.",
+		"permuted-summary":"A mátrix megjelenítése a kész sorok főelemsorrendjében",
+		"created-by":"Készítette:",
+		initialStep:"A kiinduló mátrix látható. A Következő lépés gombbal válassz főelemet, és nullázd ki az alatta lévő elemeket.",
+		stepPrefix:"Lépés", chooseLargest:"a legnagyobb alkalmas főelem kiválasztása", chooseFirst:"az első alkalmas főelem kiválasztása",
+		inColumn:"oszlop:", row:"sor", value:"érték", andApply:"Ezután végezd el:", multipliers:"Eliminációs szorzók", none:"nincs",
+		zeroRow:"a még ki nem választott sorokban már nincs főelem; ez a nullasor alulra kerül.",
+		finalOrder:"A sorok végleges sorrendje (1-től számozva)", reorderExplanation:"A P az A sorait ebben a sorrendben rendezi át.",
+		pTitle:"P — sorpermutáció", lTitle:"L — eliminációs szorzók", uTitle:"U — lépcsős alak"
+	}
+};
+
+function set_language(language) {
+	current_language=translations[language] ? language : "en";
+	var text=translations[current_language];
+	document.documentElement.lang=current_language;
+	document.title=text.documentTitle;
+	var elements=document.querySelectorAll("[data-i18n]");
+	for (var i=0;i<elements.length;i++) {
+		var key=elements[i].getAttribute("data-i18n");
+		elements[i].innerHTML=text[key];
+	}
+	var ariaElements=document.querySelectorAll("[data-i18n-aria]");
+	for (var j=0;j<ariaElements.length;j++) {
+		var ariaKey=ariaElements[j].getAttribute("data-i18n-aria");
+		ariaElements[j].setAttribute("aria-label",text[ariaKey]);
+	}
+	document.getElementById("language-en").setAttribute("aria-pressed",String(current_language==="en"));
+	document.getElementById("language-hu").setAttribute("aria-pressed",String(current_language==="hu"));
+	if (steps.length) {
+		display_state();
+	}
+	if (window.MathJax && MathJax.Hub) {
+		MathJax.Hub.Queue(["Typeset",MathJax.Hub,document.body]);
+	}
+}
 
 function LU_init() {
 	pos=0;
@@ -342,9 +448,10 @@ function print_extended_matrix(A,ready,pivot,rows_are_permuted,table_id) {
 }
 
 function display_step_explanation() {
+	var text=translations[current_language];
 	var message;
 	if (pos===0) {
-		message="Start with the original matrix. Choose Next step to select a pivot and eliminate entries below it.";
+		message=text.initialStep;
 	} else {
 		var previous=steps[pos-1];
 		var current=steps[pos];
@@ -356,14 +463,23 @@ function display_step_explanation() {
 			var updates=[];
 			for (var i=0;i<DIM_ROW;i++) {
 				if (previous.ready.indexOf(i)===-1 && i!==pivotRow) {
-					updates.push("row "+(i+1)+": ℓ="+current.multipliers[i][pos-1].toFixed(PREC));
+					updates.push((current_language==="hu" ? (i+1)+". sor: " : "row "+(i+1)+": ")+
+						"ℓ="+current.multipliers[i][pos-1].toFixed(PREC));
 				}
 			}
-			message="Step "+pos+": choose "+(pivoting ? "the largest eligible pivot" : "the first eligible pivot")+
-				" in column "+(pivotCol+1)+" (row "+(pivotRow+1)+", value "+value+"). Move it to pivot position "+pos+
-				" and apply Rᵢ ← Rᵢ − ℓᵢ"+pos+"R"+pos+". Multipliers: "+(updates.length ? updates.join("; ") : "none")+".";
+			if (current_language==="hu") {
+				message=text.stepPrefix+" "+pos+": "+(pivotCol+1)+". "+text.inColumn+" "+
+					(pivoting ? text.chooseLargest : text.chooseFirst)+" ("+(pivotRow+1)+". "+text.row+", "+text.value+" "+value+"). "+
+					"A főelem helye a végleges sorrendben: "+pos+". "+text.andApply+" Rᵢ ← Rᵢ − ℓᵢ"+pos+"R"+pos+". "+
+					text.multipliers+": "+(updates.length ? updates.join("; ") : text.none)+".";
+			} else {
+				message=text.stepPrefix+" "+pos+": "+(pivoting ? text.chooseLargest : text.chooseFirst)+
+					" "+text.inColumn+" "+(pivotCol+1)+" ("+text.row+" "+(pivotRow+1)+", "+text.value+" "+value+"). "+
+					text.moveTo+" "+pos+" "+text.andApply+" Rᵢ ← Rᵢ − ℓᵢ"+pos+"R"+pos+". "+
+					text.multipliers+": "+(updates.length ? updates.join("; ") : text.none)+".";
+			}
 		} else {
-			message="Step "+pos+": no pivot remains in the uncompleted rows; this zero row is placed at the bottom.";
+			message=text.stepPrefix+" "+pos+": "+text.zeroRow;
 		}
 	}
 	document.getElementById("step_explanation").textContent=message;
@@ -382,6 +498,7 @@ function matrix_html(matrix, caption, formatter) {
 }
 
 function display_factorization() {
+	var text=translations[current_language];
 	var finalState=steps[DIM_ROW];
 	var order=finalState.ready;
 	var P=[], L=[], U=[];
@@ -393,14 +510,14 @@ function display_factorization() {
 		L[i]=finalState.multipliers[order[i]].slice(0,DIM_ROW);
 		U[i]=finalState.A[order[i]].slice();
 	}
-	document.getElementById("row-order").textContent="Final row order (1-based): "+order.map(function(row) { return row+1; }).join(", ")+
-		". P reorders the rows of A in this order.";
+	document.getElementById("row-order").textContent=text.finalOrder+": "+order.map(function(row) { return row+1; }).join(", ")+
+		". "+text.reorderExplanation;
 	document.getElementById("factorization").innerHTML=
-		matrix_html(P,"P — row permutation",function(value) { return value.toString(); })+
+		matrix_html(P,text.pTitle,function(value) { return value.toString(); })+
 		'<span aria-hidden="true" style="align-self:center;font-size:1.4rem">·</span>'+
-		matrix_html(L,"L — elimination multipliers",function(value) { return value.toFixed(PREC); })+
+		matrix_html(L,text.lTitle,function(value) { return value.toFixed(PREC); })+
 		'<span aria-hidden="true" style="align-self:center;font-size:1.4rem">=</span>'+
-		matrix_html(U,"U — row-echelon matrix",function(value) { return value.toFixed(PREC); });
+		matrix_html(U,text.uTitle,function(value) { return value.toFixed(PREC); });
 }
 
 function set_pivoting(usePartialPivoting) {
