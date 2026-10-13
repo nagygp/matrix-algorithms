@@ -1,6 +1,105 @@
-<html>
-<body>
-  <p><a href="GaussianElimination.html">Online bemutató</a> a Gauss-eliminációról.</p>
-  <p><a href="DiagonalizationJacobi.html">Online bemutató</a> a szimmetrikus mátrixok sajátérték-problémáját meghatározó Jacobi-módszerről.</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="description" content="Interactive demonstrations of Gaussian elimination and the Jacobi eigenvalue method for symmetric matrices." />
+	<title>Matrix algorithms — interactive demonstrations</title>
+	<style>
+		:root {
+			color-scheme: light;
+			font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+			color: #172b4d;
+			background: #f4f7fb;
+		}
+		* { box-sizing: border-box; }
+		body { max-width: 1000px; margin: 0 auto; padding: 2rem 1.25rem 3rem; line-height: 1.6; }
+		h1, h2 { line-height: 1.25; }
+		h1 { margin: 1.5rem 0 .35rem; font-size: clamp(2rem, 5vw, 3rem); }
+		.lead { max-width: 75ch; color: #42526e; font-size: 1.1rem; }
+		.language-switch { display: flex; justify-content: flex-end; gap: .5rem; }
+		button, .link-button { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; padding: .55rem .9rem; border: 1px solid #aab7c7; border-radius: 7px; background: white; color: #172b4d; font: inherit; text-decoration: none; cursor: pointer; }
+		button:hover, .link-button:hover { background: #eef5ff; border-color: #3267a8; }
+		button[aria-pressed="true"] { color: white; background: #245b97; border-color: #245b97; }
+		button:focus-visible, a:focus-visible { outline: 3px solid #e09b22; outline-offset: 2px; }
+		.tools { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 1rem; margin: 2rem 0; }
+		.card { display: flex; flex-direction: column; padding: 1.35rem; border: 1px solid #dfe5ee; border-radius: 12px; background: white; box-shadow: 0 3px 12px #172b4d0a; }
+		.card h2 { margin: 0 0 .5rem; }
+		.card p { color: #42526e; }
+		.card .link-button { align-self: flex-start; margin-top: auto; color: white; background: #245b97; border-color: #245b97; }
+		.card .link-button:hover { background: #174477; }
+		footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #dfe5ee; color: #5e6c84; }
+		@media (max-width: 600px) { body { padding: 1.1rem .75rem 2rem; } .card { padding: 1rem; } }
+	</style>
+</head>
+<body onload="set_language(navigator.language && navigator.language.toLowerCase().indexOf('hu')===0 ? 'hu' : 'en')">
+	<header>
+		<nav class="language-switch" aria-label="Language" data-i18n-aria="language-label">
+			<button id="language-en" type="button" onclick="set_language('en')" aria-pressed="true">English</button>
+			<button id="language-hu" type="button" onclick="set_language('hu')" aria-pressed="false">Magyar</button>
+		</nav>
+		<h1 data-i18n="title">Matrix algorithms</h1>
+		<p class="lead" data-i18n="lead">Explore interactive demonstrations of two fundamental numerical methods. Follow each algorithm step by step and see the matrix transformations behind the results.</p>
+	</header>
+
+	<main class="tools">
+		<article class="card">
+			<h2 data-i18n="gaussian-title">Gaussian elimination</h2>
+			<p data-i18n="gaussian-description">Step through row reduction, compare pivot-selection strategies, and see how the elimination multipliers form the $L$ and $U$ factors in $PA=LU$.</p>
+			<a class="link-button" href="GaussianElimination.html" data-i18n="gaussian-link">Open the Gaussian elimination demo</a>
+		</article>
+		<article class="card">
+			<h2 data-i18n="jacobi-title">The Jacobi method</h2>
+			<p data-i18n="jacobi-description">Watch plane rotations diagonalize a real symmetric matrix. Track convergence, eigenvalue estimates, eigenvectors, and the reconstruction $A=Q\Lambda Q^T$.</p>
+			<a class="link-button" href="DiagonalizationJacobi.html" data-i18n="jacobi-link">Open the Jacobi method demo</a>
+		</article>
+	</main>
+
+	<footer data-i18n="footer">Choose a demonstration above to get started.</footer>
+
+	<script>
+		var translations={
+			en:{
+				title:"Matrix algorithms",
+				lead:"Explore interactive demonstrations of two fundamental numerical methods. Follow each algorithm step by step and see the matrix transformations behind the results.",
+				"gaussian-title":"Gaussian elimination",
+				"gaussian-description":"Step through row reduction, compare pivot-selection strategies, and see how the elimination multipliers form the $L$ and $U$ factors in $PA=LU$.",
+				"gaussian-link":"Open the Gaussian elimination demo",
+				"jacobi-title":"The Jacobi method",
+				"jacobi-description":"Watch plane rotations diagonalize a real symmetric matrix. Track convergence, eigenvalue estimates, eigenvectors, and the reconstruction $A=Q\\Lambda Q^T$.",
+				"jacobi-link":"Open the Jacobi method demo",
+				footer:"Choose a demonstration above to get started.",
+				"language-label":"Language"
+			},
+			hu:{
+				title:"Mátrixalgoritmusok",
+				lead:"Ismerkedj meg két alapvető numerikus módszer interaktív bemutatójával. Kövesd végig az algoritmusokat lépésenként, és figyeld meg az eredményekhez vezető mátrixátalakításokat.",
+				"gaussian-title":"Gauss-elimináció",
+				"gaussian-description":"Léptesd végig a sorredukciót, hasonlítsd össze a főelemkiválasztási módszereket, és figyeld meg, hogyan adják az eliminációs szorzók a $PA=LU$ felbontás $L$ és $U$ tényezőit.",
+				"gaussian-link":"A Gauss-elimináció bemutatója",
+				"jacobi-title":"A Jacobi-módszer",
+				"jacobi-description":"Figyeld meg, hogyan diagonalizálják a síkbeli forgatások a valós szimmetrikus mátrixot. Kövesd a konvergenciát, a sajátérték-közelítéseket, a sajátvektorokat és az $A=Q\\Lambda Q^T$ visszaállítást.",
+				"jacobi-link":"A Jacobi-módszer bemutatója",
+				footer:"A kezdéshez válaszd ki a fenti bemutatók egyikét.",
+				"language-label":"Nyelv"
+			}
+		};
+
+		function set_language(language) {
+			var selected=translations[language] ? language : "en";
+			document.documentElement.lang=selected;
+			var elements=document.querySelectorAll("[data-i18n]");
+			for (var i=0;i<elements.length;i++) {
+				elements[i].innerHTML=translations[selected][elements[i].getAttribute("data-i18n")];
+			}
+			var ariaElements=document.querySelectorAll("[data-i18n-aria]");
+			for (var j=0;j<ariaElements.length;j++) {
+				var key=ariaElements[j].getAttribute("data-i18n-aria");
+				ariaElements[j].setAttribute("aria-label",translations[selected][key]);
+			}
+			document.getElementById("language-en").setAttribute("aria-pressed",String(selected==="en"));
+			document.getElementById("language-hu").setAttribute("aria-pressed",String(selected==="hu"));
+		}
+	</script>
 </body>
 </html>
